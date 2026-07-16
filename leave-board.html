@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Leave Board</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --board-bg: #14181F;
+    --board-panel: #1C222C;
+    --board-panel-raised: #232B37;
+    --flap-amber: #F2A93B;
+    --flap-amber-dim: #8a6323;
+    --off-white: #EDEAE0;
+    --muted: #8791A0;
+    --teal: #2E9E82;
+    --teal-dim: #163B32;
+    --red: #E0584D;
+    --red-dim: #3A1E1C;
+    --line: #2C3440;
+    --radius: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--board-bg);
+    color: var(--off-white);
+    min-height:100vh;
+    padding: 28px 20px 60px;
+  }
+
+  .wrap{max-width: 1040px; margin: 0 auto;}
+
+  /* ---------- HEADER / SPLIT FLAP ---------- */
+  .board-header{
+    background: linear-gradient(180deg, #191F28, #12161D);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    margin-bottom: 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .board-header::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    color: var(--muted);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .title-row{
+    display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size: 40px;
+    letter-spacing: 1px;
+    margin:0;
+    color: var(--flap-amber);
+    text-shadow: 0 0 18px rgba(242,169,59,0.25);
+  }
+  .clock{
+    font-family:'Space Mono', monospace;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ---------- ROLE TOGGLE ---------- */
+  .role-toggle{
+    display:flex; gap:2px;
+    background: var(--board-panel);
+    border:1px solid var(--line);
+    border-radius: 999px;
+    padding:4px;
+    width: fit-content;
+    margin: 0 auto 24px;
+  }
+  .role-toggle button{
+    font-family:'Oswald', sans-serif;
+    letter-spacing:0.5px;
+    font-size:14px;
+    padding: 9px 22px;
+    border-radius:999px;
+    border:none;
+    background:transparent;
+    color: var(--muted);
+    cursor:pointer;
+    transition: all .18s ease;
+  }
+  .role-toggle button.active{
+    background: var(--flap-amber);
+    color: #14181F;
+    font-weight:600;
+  }
+  .role-toggle button:hover:not(.active){ color: var(--off-white); }
+
+  /* ---------- PANEL ---------- */
+  .panel{
+    background: var(--board-panel);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 22px;
+  }
+  .panel h2{
+    font-family:'Oswald', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px;
+    color: var(--off-white);
+  }
+  .panel .sub{
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 18px;
+  }
+
+  /* ---------- FORM ---------- */
+  .form-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .form-grid .full{ grid-column: 1 / -1; }
+  label{
+    display:block;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight:600;
+  }
+  input[type=text], input[type=date], textarea{
+    width:100%;
+    background: var(--board-panel-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--off-white);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline:none;
+    transition: border-color .15s;
+  }
+  input[type=text]:focus, input[type=date]:focus, textarea:focus{
+    border-color: var(--flap-amber);
+  }
+  input.error{ border-color: var(--red); }
+  textarea{ resize: vertical; min-height: 60px; }
+
+  .field-err{
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 5px;
+    display:none;
+  }
+  .field-err.show{ display:block; }
+
+  .btn{
+    font-family:'Oswald', sans-serif;
+    letter-spacing: 0.5px;
+    font-size: 14px;
+    font-weight:600;
+    padding: 11px 22px;
+    border-radius: 6px;
+    border: none;
+    cursor:pointer;
+    transition: transform .12s, box-shadow .12s, opacity .12s;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn-primary{
+    background: var(--flap-amber);
+    color: #14181F;
+  }
+  .btn-primary:hover{ box-shadow: 0 0 0 3px rgba(242,169,59,0.2); }
+  .btn-approve{ background: var(--teal); color:#fff; }
+  .btn-approve:hover{ box-shadow: 0 0 0 3px rgba(46,158,130,0.25); }
+  .btn-reject{ background: var(--red); color:#fff; }
+  .btn-reject:hover{ box-shadow: 0 0 0 3px rgba(224,88,77,0.25); }
+  .btn-ghost{
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover{ color: var(--off-white); border-color: var(--muted); }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .form-actions{
+    grid-column: 1/-1;
+    display:flex; align-items:center; gap: 14px;
+    margin-top: 4px;
+  }
+  .toast{
+    font-size: 13px;
+    color: var(--teal);
+    font-family:'Space Mono', monospace;
+    opacity:0;
+    transition: opacity .25s;
+  }
+  .toast.show{ opacity:1; }
+
+  /* ---------- STATUS BADGE ---------- */
+  .badge{
+    font-family:'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display:inline-block;
+    white-space:nowrap;
+  }
+  .badge.pending{ background: rgba(242,169,59,0.12); color: var(--flap-amber); border: 1px solid var(--flap-amber-dim); }
+  .badge.approved{ background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal); }
+  .badge.rejected{ background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+
+  /* ---------- REQUEST ROWS (team lead) ---------- */
+  .request-row{
+    display:grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items:center;
+    gap: 14px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .request-row:last-child{ border-bottom:none; }
+  .req-who{ font-weight:600; font-family:'Oswald',sans-serif; letter-spacing:0.4px; }
+  .req-dates{ color: var(--muted); font-size: 12.5px; font-family:'Space Mono', monospace; }
+  .req-reason{ color: var(--muted); font-size: 13px; margin-top:2px; }
+  .req-actions{ display:flex; gap:8px; }
+  .req-actions .btn{ padding: 7px 14px; font-size: 12px; }
+  .empty-state{
+    text-align:center;
+    padding: 30px 10px;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  /* ---------- DASHBOARD / DEPARTURE BOARD ---------- */
+  .date-picker-row{
+    display:flex; align-items:center; gap: 14px; margin-bottom: 20px; flex-wrap:wrap;
+  }
+  .date-picker-row input[type=date]{ max-width: 190px; }
+  .today-btn{ font-size:12px; padding: 9px 14px; }
+
+  .flap-table{
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow:hidden;
+  }
+  .flap-head{
+    display:grid;
+    grid-template-columns: 90px 1.4fr 1fr 1fr;
+    background: #10141B;
+    padding: 10px 16px;
+    font-family:'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  .flap-row{
+    display:grid;
+    grid-template-columns: 90px 1.4fr 1fr 1fr;
+    align-items:center;
+    padding: 14px 16px;
+    background: var(--board-panel-raised);
+    border-bottom: 1px solid var(--line);
+    animation: flapin .35s ease;
+  }
+  .flap-row:last-child{ border-bottom:none; }
+  .flap-row:nth-child(even){ background: #1F2530; }
+  @keyframes flapin{
+    from{ opacity:0; transform: translateY(-6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .flap-status{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    letter-spacing: 1px;
+    font-size: 13px;
+  }
+  .flap-status.out{ color: var(--red); }
+  .flap-status.pending{ color: var(--flap-amber); }
+  .flap-status.available{ color: var(--teal); }
+  .flap-user{
+    font-family:'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+  .flap-dates, .flap-reason{
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .flap-reason{ font-family:'Inter',sans-serif; }
+
+  .count-pill{
+    font-family:'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--flap-amber);
+    background: rgba(242,169,59,0.08);
+    border:1px solid var(--flap-amber-dim);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .stat-row{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card{
+    background: linear-gradient(180deg, #202834, #171D26);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .stat-card.highlight{
+    border-color: var(--flap-amber-dim);
+    background: linear-gradient(180deg, #262014, #1A1610);
+  }
+  .stat-num{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size: 40px;
+    line-height:1;
+    color: var(--flap-amber);
+  }
+  .stat-card:not(.highlight) .stat-num{ color: var(--off-white); }
+  .stat-label{
+    font-family:'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .foot-note{
+    text-align:center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 26px;
+    font-family:'Space Mono', monospace;
+  }
+
+  /* ---------- LEAD LOCK ---------- */
+  .lock-icon{
+    font-size: 11px;
+    margin-left: 6px;
+    opacity: 0.8;
+  }
+  .lock-panel{
+    max-width: 380px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 34px 28px;
+  }
+  .lock-glyph{
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: rgba(242,169,59,0.1);
+    border: 1px solid var(--flap-amber-dim);
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 16px;
+    font-size: 20px;
+  }
+  .lock-panel h2{ text-align:center; }
+  .lock-panel .sub{ text-align:center; }
+  .lock-panel input[type=password]{
+    width:100%;
+    background: var(--board-panel-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--off-white);
+    padding: 11px 14px;
+    font-size: 15px;
+    letter-spacing: 3px;
+    text-align:center;
+    font-family: 'Space Mono', monospace;
+    outline:none;
+    margin-bottom: 10px;
+    transition: border-color .15s;
+  }
+  .lock-panel input[type=password]:focus{ border-color: var(--flap-amber); }
+  .lock-panel input.error{ border-color: var(--red); animation: shake .3s; }
+  @keyframes shake{
+    25%{ transform: translateX(-5px); }
+    75%{ transform: translateX(5px); }
+  }
+  .lock-err{
+    color: var(--red);
+    font-size: 12.5px;
+    margin: -2px 0 12px;
+    display:none;
+    font-family:'Space Mono', monospace;
+  }
+  .lock-err.show{ display:block; }
+  .lock-panel .btn-primary{ width:100%; }
+
+  .portal-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 18px;
+  }
+  .portal-tag{
+    font-family:'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .btn-logout{
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+
+  /* ---------- 30-DAY CALENDAR GRID ---------- */
+  .calendar-wrap{
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--board-panel-raised);
+  }
+  .cal-table{
+    border-collapse: collapse;
+    width: max-content;
+  }
+  .cal-table th, .cal-table td{
+    padding: 7px 9px;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .cal-table th{
+    background: #10141B;
+    color: var(--muted);
+    font-weight: 400;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .cal-table th.today-col, .cal-table td.today-col{
+    background: rgba(242,169,59,0.08);
+  }
+  .cal-table .user-col{
+    position: sticky;
+    left: 0;
+    background: var(--board-panel-raised);
+    text-align: left;
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    min-width: 150px;
+    z-index: 2;
+  }
+  .cal-table th.user-col{ background: #10141B; z-index: 3; }
+  .cal-dot{
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .cal-dot.out{ background: var(--red); box-shadow: 0 0 6px rgba(224,88,77,0.5); }
+  .cal-dot.pending{ background: var(--flap-amber); box-shadow: 0 0 6px rgba(242,169,59,0.5); }
+  .cal-dot.free{ background: var(--line); }
+
+  @media (max-width: 640px){
+    .form-grid{ grid-template-columns: 1fr; }
+    .flap-head, .flap-row{ grid-template-columns: 70px 1fr 1fr; }
+    .flap-head .col-reason, .flap-row .flap-reason{ display:none; }
+    h1{ font-size: 30px; }
+    .request-row{ grid-template-columns: 1fr; }
+    .req-actions{ margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="board-header">
+    <div class="eyebrow">Team Attendance · Live</div>
+    <div class="title-row">
+      <h1>LEAVE BOARD</h1>
+      <div class="clock" id="clock"></div>
+    </div>
+  </div>
+
+  <div class="role-toggle">
+    <button id="tab-apply" class="active">Apply</button>
+    <button id="tab-lead">Team Lead <span class="lock-icon">🔒</span></button>
+    <button id="tab-dashboard">Dashboard</button>
+  </div>
+
+  <!-- LEAD LOCK SCREEN -->
+  <div class="panel lock-panel" id="view-lead-lock" style="display:none;">
+    <div class="lock-glyph">🔒</div>
+    <h2>Team Lead Portal</h2>
+    <p class="sub">Enter the team lead password to review and approve requests.</p>
+    <input type="password" id="lock-input" placeholder="Password" autocomplete="off">
+    <div class="lock-err" id="lock-err">Incorrect password. Try again.</div>
+    <button class="btn btn-primary" id="lock-submit">Unlock portal</button>
+  </div>
+
+  <!-- APPLY VIEW -->
+  <div class="panel" id="view-apply">
+    <h2>Request time off</h2>
+    <p class="sub">Fill in your username so your team lead knows exactly who's asking. Nothing shows on the board until it's approved.</p>
+    <div class="form-grid">
+      <div class="full">
+        <label for="f-username">Username *</label>
+        <input type="text" id="f-username" placeholder="e.g. puneet.k" autocomplete="off" list="username-suggestions">
+        <datalist id="username-suggestions"></datalist>
+        <div class="field-err" id="err-username">Username is required — the board can't show anonymous leave.</div>
+      </div>
+      <div class="full" id="username-hint" style="display:none; margin-top:-8px;">
+        <span style="font-size:12px; color: var(--muted); font-family:'Space Mono', monospace;" id="username-hint-text"></span>
+      </div>
+      <div>
+        <label for="f-start">Start date *</label>
+        <input type="date" id="f-start">
+        <div class="field-err" id="err-start">Pick a start date.</div>
+      </div>
+      <div>
+        <label for="f-end">End date *</label>
+        <input type="date" id="f-end">
+        <div class="field-err" id="err-end">End date can't be before the start date.</div>
+      </div>
+      <div class="full">
+        <label for="f-reason">Reason (optional)</label>
+        <textarea id="f-reason" placeholder="e.g. family function, medical, vacation..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="btn-submit">Submit request</button>
+        <span class="toast" id="submit-toast">✓ Sent for approval</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM LEAD VIEW -->
+  <div class="panel" id="view-lead" style="display:none;">
+    <div class="portal-bar">
+      <span class="portal-tag">🔓 Portal unlocked</span>
+      <button class="btn btn-ghost btn-logout" id="btn-lead-logout">Lock portal</button>
+    </div>
+    <h2>Pending approvals</h2>
+    <p class="sub">Leave only appears on the dashboard once you approve it here.</p>
+    <div id="pending-list"></div>
+  </div>
+
+  <div class="panel" id="view-lead-directory" style="display:none;">
+    <h2>Team directory</h2>
+    <p class="sub">This is the username database that powers autocomplete on the Apply form and the status board below. Add teammates here so suggestions work even before their first request.</p>
+    <div class="form-grid">
+      <div class="full" style="display:flex; gap:10px; align-items:flex-end;">
+        <div style="flex:1;">
+          <label for="dir-add-input">Add username</label>
+          <input type="text" id="dir-add-input" placeholder="e.g. neha.sharma" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" id="dir-add-btn">Add to directory</button>
+      </div>
+    </div>
+    <div id="directory-manage-list" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="panel" id="view-lead-sync" style="display:none;">
+    <h2>Google Sheet sync</h2>
+    <p class="sub">Paste your Apps Script Web App URL and the team lead's email. New requests get emailed to that address with one-click Approve/Reject links, and every decision — from email or from this portal — writes into the Sheet.</p>
+    <div class="form-grid">
+      <div class="full">
+        <label for="sync-url-input">Apps Script Web App URL</label>
+        <input type="text" id="sync-url-input" placeholder="https://script.google.com/macros/s/XXXX/exec" autocomplete="off">
+      </div>
+      <div class="full">
+        <label for="sync-email-input">Team lead email</label>
+        <input type="text" id="sync-email-input" placeholder="lead@company.com" autocomplete="off">
+      </div>
+      <div class="full form-actions" style="margin-top:0;">
+        <button class="btn btn-primary" id="sync-url-save">Save</button>
+        <span id="sync-status-text" style="font-size:12.5px; color: var(--muted); font-family:'Space Mono', monospace;"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="view-lead-history" style="display:none;">
+    <h2>Decision history</h2>
+    <p class="sub">Everything you've already approved or rejected.</p>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div class="panel" id="view-dashboard" style="display:none;">
+    <h2>Who's out</h2>
+    <p class="sub">Pick a date to see everyone with an approved leave covering it.</p>
+
+    <div class="stat-row">
+      <div class="stat-card highlight">
+        <div class="stat-num" id="stat-onleave">0</div>
+        <div class="stat-label" id="stat-onleave-label">On leave today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-pending">0</div>
+        <div class="stat-label">Pending approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Total requests logged</div>
+      </div>
+    </div>
+
+    <div class="date-picker-row">
+      <input type="date" id="d-date">
+      <button class="btn btn-ghost today-btn" id="btn-today">Today</button>
+      <span class="count-pill" id="count-pill">0 on leave</span>
+    </div>
+    <div class="flap-table">
+      <div class="flap-head">
+        <div>Status</div>
+        <div>Username</div>
+        <div>Leave dates</div>
+        <div class="col-reason">Reason</div>
+      </div>
+      <div id="flap-body"></div>
+    </div>
+
+    <h2 style="margin-top:28px;">Team status directory</h2>
+    <p class="sub">Live status for every username in the database, pulled straight from the leave pipeline.</p>
+    <div class="flap-table">
+      <div class="flap-head" >
+        <div>Status</div>
+        <div>Username</div>
+        <div>Since</div>
+        <div class="col-reason">Detail</div>
+      </div>
+      <div id="directory-body" ></div>
+    </div>
+
+    <h2 style="margin-top:28px;">30-day leave calendar</h2>
+    <p class="sub">Rolling window starting today. Each dot reflects live status — <span style="color:var(--red);">●</span> out, <span style="color:var(--flap-amber);">●</span> pending, <span style="color:var(--muted);">●</span> free.</p>
+    <div class="calendar-wrap" id="calendar-wrap"></div>
+  </div>
+
+  <div class="foot-note">Leave only counts as taken once a team lead approves it here.</div>
+</div>
+
+<script>
+const STORE_KEY = 'leave-requests-v1';
+const USERS_KEY = 'known-usernames-v1';
+const WEBHOOK_KEY = 'sheet-webhook-url';
+const LEAD_EMAIL_KEY = 'sheet-lead-email';
+let leaves = []; // {id, username, start, end, reason, status, decidedBy, decidedAt}
+let knownUsers = []; // ['puneet.k', 'neha.sharma', ...] — the username database
+let sheetWebhookUrl = ''; // Apps Script Web App URL that writes status back into the Google Sheet
+let leadEmail = ''; // Team lead's email — where approval requests get sent
+
+function uid(){ return 'lv_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+async function loadLeaves(){
+  try{
+    const res = await window.storage.get(STORE_KEY, true);
+    leaves = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    leaves = [];
+  }
+}
+
+async function saveLeaves(){
+  try{
+    await window.storage.set(STORE_KEY, JSON.stringify(leaves), true);
+  }catch(e){
+    console.error('Storage failed', e);
+  }
+}
+
+async function loadUsers(){
+  try{
+    const res = await window.storage.get(USERS_KEY, true);
+    knownUsers = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    knownUsers = [];
+  }
+}
+
+async function saveUsers(){
+  try{
+    await window.storage.set(USERS_KEY, JSON.stringify(knownUsers), true);
+  }catch(e){
+    console.error('Storage failed', e);
+  }
+}
+
+async function loadWebhookUrl(){
+  try{
+    const res = await window.storage.get(WEBHOOK_KEY, true);
+    sheetWebhookUrl = res && res.value ? res.value : '';
+  }catch(e){
+    sheetWebhookUrl = '';
+  }
+}
+
+async function saveWebhookUrl(url){
+  sheetWebhookUrl = url.trim();
+  try{
+    await window.storage.set(WEBHOOK_KEY, sheetWebhookUrl, true);
+  }catch(e){
+    console.error('Storage failed', e);
+  }
+}
+
+async function loadLeadEmail(){
+  try{
+    const res = await window.storage.get(LEAD_EMAIL_KEY, true);
+    leadEmail = res && res.value ? res.value : '';
+  }catch(e){
+    leadEmail = '';
+  }
+}
+
+async function saveLeadEmail(email){
+  leadEmail = email.trim();
+  try{
+    await window.storage.set(LEAD_EMAIL_KEY, leadEmail, true);
+  }catch(e){
+    console.error('Storage failed', e);
+  }
+}
+
+// Pipeline step: push one leave request's full state to the Google Sheet via
+// the Apps Script Web App. eventType 'submit' triggers the approval email;
+// eventType 'decision' just updates the row (approved/rejected from this portal).
+// Fire-and-forget (no-cors) since Apps Script doesn't return readable CORS
+// headers to a page on a different origin.
+async function pushToSheet(entry, eventType, statusLabel, detail){
+  if(!sheetWebhookUrl) return;
+  const payload = {
+    eventType,
+    id: entry.id,
+    username: entry.username,
+    start: entry.start,
+    end: entry.end,
+    reason: entry.reason,
+    status: statusLabel,
+    detail,
+    updatedAt: new Date().toISOString(),
+    leadEmail: leadEmail || undefined
+  };
+  try{
+    await fetch(sheetWebhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){
+    console.error('Sheet sync failed', e);
+  }
+}
+
+// Pipeline step: normalize + dedupe (case-insensitive) + persist a new username into the database.
+async function addKnownUser(username){
+  const clean = username.trim();
+  if(!clean) return;
+  const exists = knownUsers.some(u => u.toLowerCase() === clean.toLowerCase());
+  if(!exists){
+    knownUsers.push(clean);
+    knownUsers.sort((a,b)=> a.localeCompare(b));
+    await saveUsers();
+  }
+  renderUsernameSuggestions();
+}
+
+async function removeKnownUser(username){
+  knownUsers = knownUsers.filter(u => u !== username);
+  await saveUsers();
+  renderDirectoryManageList();
+  renderUsernameSuggestions();
+}
+
+function renderUsernameSuggestions(){
+  const datalist = document.getElementById('username-suggestions');
+  datalist.innerHTML = knownUsers.map(u => `<option value="${escapeHtml(u)}"></option>`).join('');
+}
+
+// Pipeline step: compute a username's current status by reading straight off the leaves table.
+function computeUserStatus(username){
+  const today = todayStr();
+  const userLeaves = leaves.filter(l => l.username.toLowerCase() === username.toLowerCase());
+
+  const activeApproved = userLeaves.find(l => l.status==='approved' && l.start <= today && today <= l.end);
+  if(activeApproved){
+    return { status:'out', label:'On leave', since: fmt(activeApproved.start), detail: `Back ${fmt(activeApproved.end)}` };
+  }
+  const upcomingApproved = userLeaves
+    .filter(l => l.status==='approved' && l.start > today)
+    .sort((a,b)=> a.start.localeCompare(b.start))[0];
+  const pending = userLeaves
+    .filter(l => l.status==='pending')
+    .sort((a,b)=> a.start.localeCompare(b.start))[0];
+
+  if(pending){
+    return { status:'pending', label:'Pending', since: fmt(pending.start), detail: `Awaiting approval` };
+  }
+  if(upcomingApproved){
+    return { status:'available', label:'Available', since: '—', detail: `Leave from ${fmt(upcomingApproved.start)}` };
+  }
+  return { status:'available', label:'Available', since: '—', detail: 'No leave on record' };
+}
+
+function fmt(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function addDays(dateStr, n){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+
+// Pipeline step: status of a username on one specific date (used by the 30-day grid).
+function statusOnDate(username, dateStr){
+  const userLeaves = leaves.filter(l => l.username.toLowerCase() === username.toLowerCase());
+  if(userLeaves.some(l => l.status==='approved' && l.start <= dateStr && dateStr <= l.end)) return 'out';
+  if(userLeaves.some(l => l.status==='pending' && l.start <= dateStr && dateStr <= l.end)) return 'pending';
+  return 'free';
+}
+
+function renderCalendarGrid(){
+  const wrap = document.getElementById('calendar-wrap');
+  if(!knownUsers.length){
+    wrap.innerHTML = `<div class="empty-state">No usernames in the database yet.</div>`;
+    return;
+  }
+  const start = todayStr();
+  const days = Array.from({length:30}, (_,i)=> addDays(start, i));
+
+  let html = '<table class="cal-table"><thead><tr><th class="user-col">Username</th>';
+  days.forEach(d=>{
+    const dt = new Date(d + 'T00:00:00');
+    const label = dt.toLocaleDateString('en-US', { day:'numeric', month:'short' });
+    html += `<th class="${d===start ? 'today-col':''}">${label}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  knownUsers.forEach(u=>{
+    html += `<tr><td class="user-col">${escapeHtml(u)}</td>`;
+    days.forEach(d=>{
+      const s = statusOnDate(u, d);
+      html += `<td class="${d===start ? 'today-col':''}"><span class="cal-dot ${s}" title="${s}"></span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ---------- TEAM LEAD PASSWORD ----------
+// Change this to whatever you want the portal password to be.
+const LEAD_PASSWORD = 'teamlead123';
+let leadAuthenticated = false; // resets on page reload, by design
+
+// ---------- TABS ----------
+const tabs = {
+  apply: document.getElementById('tab-apply'),
+  lead: document.getElementById('tab-lead'),
+  dashboard: document.getElementById('tab-dashboard'),
+};
+const lockView = document.getElementById('view-lead-lock');
+const views = {
+  apply: document.getElementById('view-apply'),
+  lead: [document.getElementById('view-lead'), document.getElementById('view-lead-directory'), document.getElementById('view-lead-sync'), document.getElementById('view-lead-history')],
+  dashboard: document.getElementById('view-dashboard'),
+};
+
+function setActiveTab(name){
+  Object.values(tabs).forEach(t=>t.classList.remove('active'));
+  tabs[name].classList.add('active');
+  views.apply.style.display = name==='apply' ? 'block':'none';
+  views.dashboard.style.display = name==='dashboard' ? 'block':'none';
+
+  if(name==='lead'){
+    if(leadAuthenticated){
+      lockView.style.display = 'none';
+      views.lead.forEach(v=> v.style.display='block');
+      renderLead();
+      renderDirectoryManageList();
+      renderSyncStatus();
+    } else {
+      lockView.style.display = 'block';
+      views.lead.forEach(v=> v.style.display='none');
+      document.getElementById('lock-input').value='';
+      document.getElementById('lock-err').classList.remove('show');
+      setTimeout(()=> document.getElementById('lock-input').focus(), 50);
+    }
+  } else {
+    lockView.style.display = 'none';
+    views.lead.forEach(v=> v.style.display='none');
+  }
+
+  if(name==='dashboard') renderDashboard();
+}
+tabs.apply.onclick = ()=> setActiveTab('apply');
+tabs.lead.onclick = ()=> setActiveTab('lead');
+tabs.dashboard.onclick = ()=> setActiveTab('dashboard');
+
+// ---------- LOCK SCREEN LOGIC ----------
+const lockInput = document.getElementById('lock-input');
+const lockErr = document.getElementById('lock-err');
+
+function attemptUnlock(){
+  if(lockInput.value === LEAD_PASSWORD){
+    leadAuthenticated = true;
+    setActiveTab('lead');
+  } else {
+    lockInput.classList.add('error');
+    lockErr.classList.add('show');
+    lockInput.value = '';
+    lockInput.focus();
+    setTimeout(()=> lockInput.classList.remove('error'), 300);
+  }
+}
+document.getElementById('lock-submit').onclick = attemptUnlock;
+lockInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') attemptUnlock();
+});
+
+document.getElementById('btn-lead-logout').onclick = ()=>{
+  leadAuthenticated = false;
+  setActiveTab('apply');
+};
+
+// ---------- DIRECTORY MANAGEMENT (Team Lead) ----------
+function renderDirectoryManageList(){
+  const list = document.getElementById('directory-manage-list');
+  if(!knownUsers.length){
+    list.innerHTML = `<div class="empty-state">No usernames in the database yet. Add one above, or wait for the first Apply submission.</div>`;
+    return;
+  }
+  list.innerHTML = knownUsers.map(u=>{
+    const s = computeUserStatus(u);
+    return `
+    <div class="request-row">
+      <div>
+        <div class="req-who">${escapeHtml(u)}</div>
+        <div class="req-dates">${escapeHtml(s.detail)}</div>
+      </div>
+      <span class="badge ${s.status==='out' ? 'rejected' : s.status==='pending' ? 'pending' : 'approved'}">${s.label}</span>
+      <div></div>
+      <button class="btn btn-ghost" style="padding:7px 14px; font-size:12px;" data-remove="${escapeHtml(u)}">Remove</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.onclick = ()=> removeKnownUser(btn.getAttribute('data-remove'));
+  });
+}
+
+document.getElementById('dir-add-btn').onclick = async ()=>{
+  const input = document.getElementById('dir-add-input');
+  const val = input.value.trim();
+  if(!val) return;
+  await addKnownUser(val);
+  input.value = '';
+  renderDirectoryManageList();
+};
+document.getElementById('dir-add-input').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('dir-add-btn').click();
+});
+
+// ---------- SHEET SYNC SETTINGS (Team Lead) ----------
+function renderSyncStatus(){
+  document.getElementById('sync-url-input').value = sheetWebhookUrl;
+  document.getElementById('sync-email-input').value = leadEmail;
+  const statusEl = document.getElementById('sync-status-text');
+  if(sheetWebhookUrl && leadEmail){
+    statusEl.textContent = `✓ Connected — new requests will email ${leadEmail} with Approve/Reject links.`;
+  } else if(sheetWebhookUrl && !leadEmail){
+    statusEl.textContent = `Web App URL saved, but no team lead email yet — emails won't send until you add one.`;
+  } else {
+    statusEl.textContent = `Not connected — nothing syncs to the Sheet until a Web App URL is saved.`;
+  }
+}
+
+document.getElementById('sync-url-save').onclick = async ()=>{
+  const url = document.getElementById('sync-url-input').value;
+  const email = document.getElementById('sync-email-input').value;
+  await saveWebhookUrl(url);
+  await saveLeadEmail(email);
+  renderSyncStatus();
+};
+
+// ---------- APPLY FORM ----------
+const fUsername = document.getElementById('f-username');
+const fStart = document.getElementById('f-start');
+const fEnd = document.getElementById('f-end');
+const fReason = document.getElementById('f-reason');
+const errUsername = document.getElementById('err-username');
+const errStart = document.getElementById('err-start');
+const errEnd = document.getElementById('err-end');
+const submitToast = document.getElementById('submit-toast');
+
+document.getElementById('btn-submit').onclick = async ()=>{
+  let valid = true;
+  [fUsername, fStart, fEnd].forEach(el=>el.classList.remove('error'));
+  [errUsername, errStart, errEnd].forEach(el=>el.classList.remove('show'));
+
+  const username = fUsername.value.trim();
+  if(!username){
+    fUsername.classList.add('error');
+    errUsername.classList.add('show');
+    valid = false;
+  }
+  if(!fStart.value){
+    fStart.classList.add('error');
+    errStart.classList.add('show');
+    valid = false;
+  }
+  if(!fEnd.value || (fStart.value && fEnd.value < fStart.value)){
+    fEnd.classList.add('error');
+    errEnd.classList.add('show');
+    valid = false;
+  }
+  if(!valid) return;
+
+  const entry = {
+    id: uid(),
+    username,
+    start: fStart.value,
+    end: fEnd.value,
+    reason: fReason.value.trim(),
+    status: 'pending',
+    decidedBy: null,
+    decidedAt: null
+  };
+  leaves.push(entry);
+  await saveLeaves();
+  await addKnownUser(username);
+  await pushToSheet(entry, 'submit', 'Pending', 'Awaiting approval');
+
+  fUsername.value=''; fStart.value=''; fEnd.value=''; fReason.value='';
+  submitToast.classList.add('show');
+  setTimeout(()=> submitToast.classList.remove('show'), 2200);
+};
+
+// ---------- TEAM LEAD VIEW ----------
+function renderLead(){
+  const pendingList = document.getElementById('pending-list');
+  const historyList = document.getElementById('history-list');
+  const pending = leaves.filter(l=>l.status==='pending');
+  const decided = leaves.filter(l=>l.status!=='pending').slice().reverse();
+
+  pendingList.innerHTML = pending.length ? pending.map(l=>`
+    <div class="request-row" data-id="${l.id}">
+      <div>
+        <div class="req-who">${escapeHtml(l.username)}</div>
+        <div class="req-dates">${fmt(l.start)} → ${fmt(l.end)}</div>
+        ${l.reason ? `<div class="req-reason">${escapeHtml(l.reason)}</div>` : ''}
+      </div>
+      <span class="badge pending">Pending</span>
+      <div class="req-actions">
+        <button class="btn btn-approve" data-action="approve" data-id="${l.id}">Approve</button>
+        <button class="btn btn-reject" data-action="reject" data-id="${l.id}">Reject</button>
+      </div>
+      <div></div>
+    </div>
+  `).join('') : `<div class="empty-state">No pending requests. All caught up.</div>`;
+
+  historyList.innerHTML = decided.length ? decided.map(l=>`
+    <div class="request-row">
+      <div>
+        <div class="req-who">${escapeHtml(l.username)}</div>
+        <div class="req-dates">${fmt(l.start)} → ${fmt(l.end)}</div>
+      </div>
+      <span class="badge ${l.status}">${l.status}</span>
+      <div></div>
+      <div></div>
+    </div>
+  `).join('') : `<div class="empty-state">No decisions yet.</div>`;
+
+  pendingList.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      const l = leaves.find(x=>x.id===id);
+      if(!l) return;
+      l.status = action === 'approve' ? 'approved' : 'rejected';
+      l.decidedBy = 'team-lead';
+      l.decidedAt = new Date().toISOString();
+      await saveLeaves();
+      await pushToSheet(l, 'decision', action === 'approve' ? 'Approved' : 'Rejected', 'Decided via dashboard');
+      renderLead();
+    };
+  });
+}
+
+// ---------- DASHBOARD VIEW ----------
+const dDate = document.getElementById('d-date');
+dDate.value = todayStr();
+document.getElementById('btn-today').onclick = ()=>{
+  dDate.value = todayStr();
+  renderDashboard();
+};
+dDate.onchange = renderDashboard;
+
+function renderDashboard(){
+  const target = dDate.value || todayStr();
+  const onLeave = leaves.filter(l=> l.status==='approved' && l.start <= target && target <= l.end);
+  const pendingCount = leaves.filter(l=> l.status==='pending').length;
+
+  document.getElementById('count-pill').textContent = `${onLeave.length} on leave`;
+  document.getElementById('stat-onleave').textContent = onLeave.length;
+  document.getElementById('stat-pending').textContent = pendingCount;
+  document.getElementById('stat-total').textContent = leaves.length;
+
+  const isToday = target === todayStr();
+  document.getElementById('stat-onleave-label').textContent = isToday ? 'On leave today' : `On leave · ${fmt(target)}`;
+
+  const body = document.getElementById('flap-body');
+  body.innerHTML = onLeave.length ? onLeave.map(l=>`
+    <div class="flap-row">
+      <div class="flap-status out">OUT</div>
+      <div class="flap-user">${escapeHtml(l.username)}</div>
+      <div class="flap-dates">${fmt(l.start)} → ${fmt(l.end)}</div>
+      <div class="flap-reason">${l.reason ? escapeHtml(l.reason) : '—'}</div>
+    </div>
+  `).join('') : `<div class="empty-state">Nobody's on approved leave for this date.</div>`;
+
+  const dirBody = document.getElementById('directory-body');
+  dirBody.innerHTML = knownUsers.length ? knownUsers.map(u=>{
+    const s = computeUserStatus(u);
+    const statusText = s.status==='out' ? 'OUT' : s.status==='pending' ? 'PENDING' : 'FREE';
+    return `
+    <div class="flap-row" >
+      <div class="flap-status ${s.status}">${statusText}</div>
+      <div class="flap-user">${escapeHtml(u)}</div>
+      <div class="flap-dates">${s.since}</div>
+      <div class="flap-reason">${escapeHtml(s.detail)}</div>
+    </div>`;
+  }).join('') : `<div class="empty-state">No usernames in the database yet.</div>`;
+
+  renderCalendarGrid();
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ---------- CLOCK ----------
+function tickClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleString('en-US', {
+    weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+}
+setInterval(tickClock, 1000*30);
+tickClock();
+
+// ---------- INIT ----------
+(async ()=>{
+  await loadLeaves();
+  await loadUsers();
+  await loadWebhookUrl();
+  await loadLeadEmail();
+  renderUsernameSuggestions();
+  renderDashboard();
+})();
+</script>
+</body>
+</html>
